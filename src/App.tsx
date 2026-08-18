@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Footer } from './components/Footer'
@@ -20,6 +20,23 @@ const LocationMap = lazy(() =>
 const AdminPanel = lazy(() =>
   import('./components/admin/AdminPanel').then((m) => ({ default: m.AdminPanel })),
 )
+
+function usePathname() {
+  const [pathname, setPathname] = useState(() => window.location.pathname)
+
+  useEffect(() => {
+    const sync = () => setPathname(window.location.pathname)
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [])
+
+  return pathname
+}
+
+function isAdminRoute(pathname: string) {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+  return normalized === '/admin'
+}
 
 function MainSite() {
   return (
@@ -47,14 +64,17 @@ function MainSite() {
 }
 
 function App() {
-  const isAdmin = window.location.pathname === '/admin'
-  if (isAdmin) {
+  const pathname = usePathname()
+  const admin = isAdminRoute(pathname)
+
+  if (admin) {
     return (
       <Suspense fallback={<SectionFallback height="100vh" />}>
         <AdminPanel />
       </Suspense>
     )
   }
+
   return <MainSite />
 }
 

@@ -1,0 +1,107 @@
+[
+  {
+    "id": "design-008",
+    "name_en": "French Classic",
+    "name_ku": "فرێنچی کلاسیک",
+    "category": "french",
+    "imagePath": "/assets/design_008.webp"
+  },
+  {
+    "id": "design-014",
+    "name_en": "Red Tip French",
+    "name_ku": "فرێنچی لووت سوور",
+    "category": "french",
+    "imagePath": "/assets/design_014.webp"
+  },
+  {
+    "id": "design-001",
+    "name_en": "Snowy Christmas",
+    "name_ku": "کریسمسی بەفراوی",
+    "category": "holiday",
+    "imagePath": "/assets/design_001.webp"
+  },
+  {
+    "id": "design-002",
+    "name_en": "Winter Sparkle",
+    "name_ku": "بریقەی زستان",
+    "category": "holiday",
+    "imagePath": "/assets/design_002.webp"
+  },
+  {
+    "id": "design-009",
+    "name_en": "Frosty Art",
+    "name_ku": "نەخشی بەستەڵەک",
+    "category": "holiday",
+    "imagePath": "/assets/design_009.webp"
+  },
+  {
+    "id": "design-015",
+    "name_en": "Holiday Joy",
+    "name_ku": "خۆشی جەژن",
+    "category": "holiday",
+    "imagePath": "/assets/design_015.webp"
+  },
+  {
+    "id": "design-013",
+    "name_en": "Leopard Luxe",
+    "name_ku": "پڵنگی لوکس",
+    "category": "animal",
+    "imagePath": "/assets/design_013.webp"
+  },
+  {
+    "id": "design-004",
+    "name_en": "Lovely Hearts",
+    "name_ku": "دڵە ڕۆمانسییەکان",
+    "category": "hearts",
+    "imagePath": "/assets/design_004.webp"
+  },
+  {
+    "id": "design-005",
+    "name_en": "Romance Blush",
+    "name_ku": "ڕۆمانسی پەمەیی",
+    "category": "hearts",
+    "imagePath": "/assets/design_005.webp"
+  },
+  {
+    "id": "design-006",
+    "name_en": "Sweet Hearts",
+    "name_ku": "دڵە شیرینەکان",
+    "category": "hearts",
+    "imagePath": "/assets/design_006.webp"
+  },
+  {
+    "id": "design-007",
+    "name_en": "Rose Romance",
+    "name_ku": "ڕۆمانسی ڕۆز",
+    "category": "hearts",
+    "imagePath": "/assets/design_007.webp"
+  },
+  {
+    "id": "design-010",
+    "name_en": "Lovely Hearts",
+    "name_ku": "دڵە ڕۆمانسییەکان",
+    "category": "hearts",
+    "imagePath": "/assets/design_010.webp"
+  },
+  {
+    "id": "design-011",
+    "name_en": "Romance Blush",
+    "name_ku": "ڕۆمانسی پەمەیی",
+    "category": "hearts",
+    "imagePath": "/assets/design_011.webp"
+  },
+  {
+    "id": "design-012",
+    "name_en": "Sweet Hearts",
+    "name_ku": "دڵە شیرینەکان",
+    "category": "hearts",
+    "imagePath": "/assets/design_012.webp"
+  },
+  {
+    "id": "design-003",
+    "name_en": "Chrome Shine",
+    "name_ku": "کرۆمی بریقەدار",
+    "category": "glitter",
+    "imagePath": "/assets/design_003.webp"
+  }
+]

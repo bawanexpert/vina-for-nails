@@ -1,0 +1,442 @@
+@import "tailwindcss";
+
+@theme {
+  --color-onyx: #0b0b0e;
+  --color-velvet: #121118;
+  --color-rose-gold: #E0A96D;
+  --color-blush: #F4C2C2;
+  --color-champagne: #F7E7CE;
+  --color-muted: #A1A1AA;
+  --color-bright: #FAFAFA;
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "Outfit", sans-serif;
+  --font-kurdish: "Noto Sans Arabic", sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(224, 169, 109, 0.4) rgba(255, 255, 255, 0.05);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #E0A96D, #F4C2C2);
+  border-radius: 999px;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+.tap-target {
+  touch-action: manipulation;
+}
+
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 20% 0%, rgba(224, 169, 109, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(244, 194, 194, 0.06) 0%, transparent 50%),
+    linear-gradient(180deg, #0b0b0e 0%, #121118 50%, #0b0b0e 100%);
+  color: #FAFAFA;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+html[dir="rtl"] body {
+  font-family: var(--font-kurdish), var(--font-body);
+}
+
+.glass {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-ring {
+  box-shadow: 0 0 40px rgba(224, 169, 109, 0.15),
+    0 0 80px rgba(244, 194, 194, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #F7E7CE 0%, #E0A96D 50%, #F4C2C2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.section-padding {
+  padding: 4rem 1rem;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+@media (min-width: 768px) {
+  .section-padding {
+    padding: 6rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-padding {
+    padding: 7rem 3rem;
+  }
+}
+
+/* ============================================================
+   Nail swatch stick — white plastic stem + polished almond tip
+   ============================================================ */
+
+.swatch {
+  --stick-w: 56px;
+  --stick-h: 250px;
+  position: relative;
+  display: block;
+  width: var(--stick-w);
+  height: var(--stick-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.35));
+  transform-origin: 50% 100%;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
+}
+
+.swatch__tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44%;
+  border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%;
+  overflow: hidden;
+  background: #eceef1;
+  border: 2px solid #f6f6f8;
+  box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.14), inset 0 3px 5px rgba(255, 255, 255, 0.7);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.swatch__tip img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.swatch__gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.4) 10%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.14) 52%,
+    rgba(255, 255, 255, 0.55) 78%,
+    rgba(255, 255, 255, 0) 95%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.swatch__gloss--sweep {
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 58%
+  );
+  opacity: 0;
+  transform: translateX(-140%);
+}
+
+.swatch--active .swatch__gloss--sweep {
+  opacity: 1;
+  animation: gloss-sweep 2.8s ease-in-out infinite;
+}
+
+@keyframes gloss-sweep {
+  0%, 55%, 100% { transform: translateX(140%); }
+  25%, 30% { transform: translateX(-140%); }
+}
+
+.swatch__shade {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 34%, rgba(0, 0, 0, 0.22));
+  pointer-events: none;
+}
+
+.swatch__stem {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translateX(-50%);
+  width: 56%;
+  height: 62%;
+  border-radius: 999px 999px 8px 8px;
+  background: linear-gradient(90deg, #c9cad0, #ffffff 22%, #ffffff 58%, #e7e8ec 82%, #c3c4ca);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.swatch__stem-shine {
+  position: absolute;
+  top: 4%;
+  bottom: 4%;
+  left: 18%;
+  width: 26%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.05));
+}
+
+.swatch__base {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  transform: translateX(-50%);
+  width: 34%;
+  height: 5%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e6e7ec, #b9bac2);
+  box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.12);
+}
+
+.swatch:hover .swatch__tip,
+.swatch--active .swatch__tip {
+  transform: translateY(-3px);
+}
+
+.swatch--active {
+  filter: drop-shadow(0 18px 26px rgba(224, 169, 109, 0.4));
+}
+
+.swatch--active .swatch__tip {
+  border-color: #E0A96D;
+  box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.14), inset 0 3px 5px rgba(255, 255, 255, 0.7),
+    0 0 22px rgba(224, 169, 109, 0.55);
+}
+
+.swatch--active .swatch__stem {
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 0 -3px 4px rgba(0, 0, 0, 0.08),
+    0 0 14px rgba(224, 169, 109, 0.35);
+}
+
+/* ============================================================
+   Swatch wheel — CSS 3D radial fan
+   ============================================================ */
+
+.swatch-wheel-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+.swatch-wheel {
+  position: relative;
+  --stick-h: 258px;
+  --stick-w: 56px;
+  height: calc(var(--stick-h) + 24px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.swatch-wheel__fan {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 0;
+  height: 0;
+  perspective: 1200px;
+}
+
+.swatch-wheel__slot {
+  position: absolute;
+  left: calc(var(--stick-w) / -2);
+  bottom: 0;
+  width: var(--stick-w);
+  height: var(--stick-h);
+  transform-origin: 50% 100%;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.swatch-wheel.is-dragging .swatch-wheel__slot,
+.swatch-wheel.is-dragging .swatch {
+  transition: none;
+}
+
+.swatch-wheel__floor {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  width: 84%;
+  max-width: 620px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 70%);
+  filter: blur(7px);
+  pointer-events: none;
+}
+
+.swatch-wheel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--color-champagne);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.swatch-wheel__arrow--prev { inset-inline-start: 0; }
+.swatch-wheel__arrow--next { inset-inline-end: 0; }
+
+.swatch-wheel__arrow:hover:not(:disabled) {
+  background: rgba(224, 169, 109, 0.25);
+  border-color: rgba(224, 169, 109, 0.5);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.swatch-wheel__arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+@media (max-width: 639px) {
+  .swatch-wheel {
+    --stick-h: 220px;
+    --stick-w: 48px;
+  }
+
+  .swatch-section {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* ============================================================
+   Hero decorative fan
+   ============================================================ */
+
+.hero-fan {
+  position: relative;
+  margin-inline: auto;
+  width: 340px;
+  height: 236px;
+  --stick-h: 226px;
+  --stick-w: 52px;
+  pointer-events: none;
+}
+
+.hero-fan__slot {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--stick-w);
+  height: var(--stick-h);
+  transform-origin: 50% 100%;
+}
+
+.hero-fan__slot .swatch {
+  animation: fan-bob 5s ease-in-out infinite;
+}
+
+.hero-fan__slot:nth-child(1) .swatch { animation-delay: -1.6s; }
+.hero-fan__slot:nth-child(3) .swatch { animation-delay: -3.2s; }
+
+@keyframes fan-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+/* ============================================================
+   Motion safety
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .swatch--active .swatch__gloss--sweep,
+  .hero-fan__slot .swatch {
+    animation: none;
+  }
+  .swatch, .swatch__tip, .swatch-wheel__slot {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ============================================================
+   Luxury form inputs — dark glassmorphism
+   ============================================================ */
+
+.luxury-input,
+select.luxury-input {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color-scheme: dark;
+  color: #fafafa;
+}
+
+.luxury-input:hover,
+select.luxury-input:hover {
+  border-color: rgba(244, 194, 194, 0.3);
+}
+
+.luxury-input:focus,
+select.luxury-input:focus {
+  border-color: rgba(224, 169, 109, 0.5);
+}
+
+input[type="date"].luxury-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+select option {
+  background: #121118;
+  color: #fafafa;
+}

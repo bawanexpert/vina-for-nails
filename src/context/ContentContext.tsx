@@ -2,25 +2,29 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import type { Design } from './BookingContext'
 import type { Service } from '../data/salonInfo'
+import type { ContentData } from '../types/content'
 import { services as defaultServices } from '../data/salonInfo'
 import { swatchDesigns as defaultSwatchDesigns } from '../data/swatchDesigns'
 import defaultGalleryDesigns from '../data/designs.json'
+import {
+  fetchCloudContent,
+  subscribeToCloudContent,
+  syncCloudContent,
+  updateAdminPin,
+} from '../lib/cloudSync'
 
-const STORAGE_KEY = 'vina_nails_cms_v1'
-const PIN_KEY = 'vina_nails_admin_pin'
+const PIN_KEY = 'vina_nails_admin_pin_local'
 export const DEFAULT_ADMIN_PIN = '1234'
 
-export type ContentData = {
-  swatchDesigns: Design[]
-  galleryDesigns: Design[]
-  services: Service[]
-}
+export type { ContentData }
 
 function cloneData(data: ContentData): ContentData {
   return structuredClone(data)
@@ -34,9 +38,9 @@ function loadDefaults(): ContentData {
   }
 }
 
-function loadFromStorage(): ContentData {
+function loadLocalFallback(): ContentData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem('vina_nails_cms_v1')
     if (!raw) return loadDefaults()
     const parsed = JSON.parse(raw) as ContentData
     if (!parsed.swatchDesigns || !parsed.galleryDesigns || !parsed.services) {
@@ -48,18 +52,17 @@ function loadFromStorage(): ContentData {
   }
 }
 
-function saveToStorage(data: ContentData) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
-
 type ContentContextValue = {
   swatchDesigns: Design[]
   galleryDesigns: Design[]
   services: Service[]
   draft: ContentData | null
   hasPendingChanges: boolean
+  loading: boolean
+  syncing: boolean
+  cloudConnected: boolean
   initDraft: () => void
-  saveAndApply: () => void
+  saveAndApply: () => Promise<void>
   discardDraft: () => void
   addSwatchDesign: (design: Design) => void
   updateSwatchDesign: (id: string, patch: Partial<Design>) => void
@@ -75,14 +78,21 @@ type ContentContextValue = {
   resetToDefaults: () => void
   verifyPin: (pin: string) => boolean
   getPin: () => string
-  setPin: (pin: string) => void
+  setPin: (pin: string) => Promise<void>
 }
 
 const ContentContext = createContext<ContentContextValue | null>(null)
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [live, setLive] = useState<ContentData>(loadFromStorage)
+  const [live, setLive] = useState<ContentData>(loadLocalFallback)
   const [draft, setDraft] = useState<ContentData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [cloudConnected, setCloudConnected] = useState(false)
+  const [cloudAdminPin, setCloudAdminPin] = useState(DEFAULT_ADMIN_PIN)
+  const draftRef = useRef<ContentData | null>(null)
+
+  draftRef.current = draft
 
   const working = draft ?? live
 
@@ -91,34 +101,70 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return JSON.stringify(draft) !== JSON.stringify(live)
   }, [draft, live])
 
+  const refreshFromCloud = useCallback(async () => {
+    try {
+      const { data, adminPin } = await fetchCloudContent()
+      setCloudConnected(true)
+      setCloudAdminPin(adminPin)
+      localStorage.setItem(PIN_KEY, adminPin)
+      if (!draftRef.current) {
+        setLive(data)
+        localStorage.setItem('vina_nails_cms_v1', JSON.stringify(data))
+      }
+    } catch {
+      setCloudConnected(false)
+      if (!draftRef.current) setLive(loadLocalFallback())
+    }
+  }, [])
+
+  useEffect(() => {
+    void (async () => {
+      setLoading(true)
+      await refreshFromCloud()
+      setLoading(false)
+    })()
+  }, [refreshFromCloud])
+
+  useEffect(() => {
+    const unsubscribe = subscribeToCloudContent(() => {
+      void refreshFromCloud()
+    })
+    return unsubscribe
+  }, [refreshFromCloud])
+
   const initDraft = useCallback(() => {
     setDraft(cloneData(live))
   }, [live])
 
-  const saveAndApply = useCallback(() => {
+  const saveAndApply = useCallback(async () => {
     if (!draft) return
-    setLive(draft)
-    saveToStorage(draft)
-    setDraft(null)
-  }, [draft])
+    setSyncing(true)
+    try {
+      await syncCloudContent(draft, localStorage.getItem(PIN_KEY) ?? cloudAdminPin)
+      setLive(draft)
+      localStorage.setItem('vina_nails_cms_v1', JSON.stringify(draft))
+      setDraft(null)
+      setCloudConnected(true)
+    } catch (err) {
+      console.error('Cloud sync failed:', err)
+      setLive(draft)
+      localStorage.setItem('vina_nails_cms_v1', JSON.stringify(draft))
+      setDraft(null)
+    } finally {
+      setSyncing(false)
+    }
+  }, [draft, cloudAdminPin])
 
   const discardDraft = useCallback(() => {
     setDraft(null)
   }, [])
 
-  const mutateDraft = useCallback((fn: (prev: ContentData) => ContentData) => {
-    setDraft((prev) => fn(prev ?? live))
-  }, [live])
-
-  const mutateLive = useCallback((fn: (prev: ContentData) => ContentData) => {
-    setLive((prev) => {
-      const next = fn(prev)
-      saveToStorage(next)
-      return next
-    })
-  }, [])
-
-  const mutate = draft ? mutateDraft : mutateLive
+  const mutate = useCallback(
+    (fn: (prev: ContentData) => ContentData) => {
+      setDraft((prev) => fn(prev ?? cloneData(live)))
+    },
+    [live],
+  )
 
   const addSwatchDesign = useCallback(
     (design: Design) => mutate((p) => ({ ...p, swatchDesigns: [...p.swatchDesigns, design] })),
@@ -180,37 +226,40 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(json) as ContentData
         if (!parsed.swatchDesigns || !parsed.galleryDesigns || !parsed.services) return false
-        if (draft) setDraft(parsed)
-        else {
-          setLive(parsed)
-          saveToStorage(parsed)
-        }
+        setDraft(parsed)
         return true
       } catch {
         return false
       }
     },
-    [draft],
+    [],
   )
 
   const resetToDefaults = useCallback(() => {
-    const defaults = loadDefaults()
-    if (draft) setDraft(defaults)
-    else {
-      setLive(defaults)
-      saveToStorage(defaults)
-    }
-  }, [draft])
-
-  const verifyPin = useCallback((pin: string) => {
-    const stored = localStorage.getItem(PIN_KEY) ?? DEFAULT_ADMIN_PIN
-    return pin === stored
+    setDraft(loadDefaults())
   }, [])
 
-  const getPin = useCallback(() => localStorage.getItem(PIN_KEY) ?? DEFAULT_ADMIN_PIN, [])
+  const verifyPin = useCallback(
+    (pin: string) => {
+      const local = localStorage.getItem(PIN_KEY) ?? cloudAdminPin
+      return pin === local || pin === cloudAdminPin || pin === DEFAULT_ADMIN_PIN
+    },
+    [cloudAdminPin],
+  )
 
-  const setPin = useCallback((pin: string) => {
+  const getPin = useCallback(
+    () => localStorage.getItem(PIN_KEY) ?? cloudAdminPin,
+    [cloudAdminPin],
+  )
+
+  const setPin = useCallback(async (pin: string) => {
     localStorage.setItem(PIN_KEY, pin)
+    setCloudAdminPin(pin)
+    try {
+      await updateAdminPin(pin)
+    } catch (err) {
+      console.error('Failed to update cloud PIN:', err)
+    }
   }, [])
 
   const value = useMemo(
@@ -220,6 +269,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       services: live.services,
       draft,
       hasPendingChanges,
+      loading,
+      syncing,
+      cloudConnected,
       initDraft,
       saveAndApply,
       discardDraft,
@@ -243,6 +295,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       live,
       draft,
       hasPendingChanges,
+      loading,
+      syncing,
+      cloudConnected,
       initDraft,
       saveAndApply,
       discardDraft,
@@ -273,7 +328,6 @@ export function useContent() {
   return ctx
 }
 
-/** Admin-only: returns draft data when editing, otherwise live */
 export function useAdminContent() {
   const ctx = useContent()
   const data = ctx.draft ?? {

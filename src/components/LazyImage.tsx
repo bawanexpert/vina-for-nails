@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getImage, isIdbPath, idFromPath } from '../lib/imageStore'
+import { getImageFallback, resolveImageUrl } from '../lib/resolveImageUrl'
 
 type LazyImageProps = {
   src: string
@@ -20,35 +21,63 @@ export function LazyImage({
   priority = false,
   aspectRatio,
 }: LazyImageProps) {
-  const [resolved, setResolved] = useState(src)
+  const [resolved, setResolved] = useState(() => resolveImageUrl(src))
   const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
 
   useEffect(() => {
+    setLoaded(false)
+    setErrored(false)
+
     let cancelled = false
-    if (!isIdbPath(src)) {
-      setResolved(src)
-      return
+
+    async function resolve() {
+      if (isIdbPath(src)) {
+        const url = await getImage(idFromPath(src))
+        if (!cancelled) setResolved(url ?? getImageFallback())
+        return
+      }
+      if (!cancelled) setResolved(resolveImageUrl(src))
     }
-    getImage(idFromPath(src)).then((url) => {
-      if (!cancelled && url) setResolved(url)
-    })
+
+    void resolve()
     return () => {
       cancelled = true
     }
   }, [src])
 
+  const displaySrc = errored ? getImageFallback() : resolved
+
   return (
-    <img
-      src={resolved}
-      alt={alt}
-      width={width}
-      height={height}
-      loading={priority ? 'eager' : 'lazy'}
-      decoding="async"
-      fetchPriority={priority ? 'high' : 'auto'}
-      onLoad={() => setLoaded(true)}
-      className={`${className} transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+    <span
+      className="relative block overflow-hidden bg-white/5"
       style={aspectRatio ? { aspectRatio } : undefined}
-    />
+    >
+      {!loaded && !errored && (
+        <span
+          className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/5 via-white/10 to-white/5"
+          aria-hidden
+        />
+      )}
+      <img
+        src={displaySrc}
+        alt={alt}
+        width={width}
+        height={height}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (!errored) {
+            setErrored(true)
+            setLoaded(true)
+          }
+        }}
+        className={`${className} h-full w-full transition-all duration-500 ${
+          loaded ? 'scale-100 opacity-100 blur-0' : 'scale-[1.02] opacity-0 blur-sm'
+        }`}
+      />
+    </span>
   )
 }

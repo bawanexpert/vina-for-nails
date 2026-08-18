@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
 import { useAdminContent, DEFAULT_ADMIN_PIN } from '../../context/ContentContext'
-import { storeUploadedImage } from '../../lib/imageStore'
+import { uploadNailImage } from '../../lib/cloudSync'
 import { LazyImage } from '../LazyImage'
 import type { Design } from '../../context/BookingContext'
 import type { DesignCategory, Service } from '../../data/salonInfo'
@@ -229,9 +229,10 @@ export function AdminPanel() {
                   type="button"
                   onClick={() => {
                     if (newPin.length >= 4) {
-                      content.setPin(newPin)
-                      setNewPin('')
-                      flash(t.admin.pinChanged)
+                      void content.setPin(newPin).then(() => {
+                        setNewPin('')
+                        flash(t.admin.pinChanged)
+                      })
                     }
                   }}
                   className="rounded-xl bg-rose-gold/20 px-4 py-2 text-sm text-champagne"
@@ -310,13 +311,12 @@ export function AdminPanel() {
           <button
             type="button"
             onClick={() => {
-              content.saveAndApply()
-              flash(t.admin.applied)
+              void content.saveAndApply().then(() => flash(t.admin.applied))
             }}
-            disabled={!content.hasPendingChanges}
+            disabled={!content.hasPendingChanges || content.syncing}
             className="tap-target flex-[2] rounded-full bg-gradient-to-r from-rose-gold to-blush py-3 text-sm font-semibold text-onyx shadow-[0_0_30px_rgba(224,169,109,0.35)] disabled:opacity-40"
           >
-            {t.admin.saveApply}
+            {content.syncing ? t.admin.syncing : t.admin.saveApply}
           </button>
         </div>
       </div>
@@ -365,8 +365,8 @@ function DesignManager({
     const file = e.target.files?.[0]
     if (!file || !editing) return
     try {
-      const path = await storeUploadedImage(file)
-      setEditing({ ...editing, imagePath: path })
+      const url = await uploadNailImage(file)
+      setEditing({ ...editing, imagePath: url })
     } catch {
       const dataUrl = await fileToDataUrl(file)
       setEditing({ ...editing, imagePath: dataUrl })
